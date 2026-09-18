@@ -145,3 +145,6 @@ cd frontend && npm run typecheck && npm test
 
 Подробная схема потоков данных и PDF-обработки находится
 в [docs/PROSPERO_LOGIC.md](docs/PROSPERO_LOGIC.md).
+
+Памятка по GitHub CLI, авторизации и безопасному управлению репозиториями находится
+в [docs/GITHUB_CLI.md](docs/GITHUB_CLI.md).
