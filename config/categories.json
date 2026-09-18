@@ -1,0 +1,13 @@
+{
+  "categories": [
+    {"slug": "python", "name": "Python", "keywords": ["python", "django", "flask", "fastapi", "sqlalchemy", "celery"]},
+    {"slug": "qa", "name": "QA", "keywords": ["qa", "quality assurance", "testing", "pytest", "selenium", "playwright", "postman"]},
+    {"slug": "cpp", "name": "C/C++", "keywords": ["c++", "cpp", "cmake", "boost", "qt", "embedded"]}
+  ],
+  "skill_aliases": {
+    "python": "Python", "django": "Django", "flask": "Flask", "fastapi": "FastAPI", "sqlalchemy": "SQLAlchemy", "celery": "Celery",
+    "postgres": "PostgreSQL", "postgresql": "PostgreSQL", "redis": "Redis", "docker": "Docker", "pytest": "Pytest",
+    "selenium": "Selenium", "playwright": "Playwright", "postman": "Postman", "c++": "C++", "cpp": "C++",
+    "cmake": "CMake", "boost": "Boost", "qt": "Qt", "embedded": "Embedded"
+  }
+}

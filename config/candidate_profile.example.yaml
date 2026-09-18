@@ -1,0 +1,42 @@
+headline: Senior Backend Engineer
+summary: Backend engineer focused on reliable Python services and APIs.
+commercial_experience_years: 8
+target_roles:
+  - Senior Backend Engineer
+  - Senior Python Developer
+primary_skills:
+  - Python
+  - FastAPI
+  - PostgreSQL
+  - Docker
+secondary_skills:
+  - Redis
+  - Kafka
+  - OpenTelemetry
+domains:
+  - SaaS
+  - data processing
+experience:
+  - company: Example Company
+    role: Backend Engineer
+    period: 2020 — present
+    highlights:
+      - Built and maintained backend APIs.
+      - Improved service reliability and delivery workflows.
+    skills:
+      - Python
+      - PostgreSQL
+      - Docker
+languages:
+  - language: English
+    level: B2
+education: []
+current_location: Example City
+work_formats:
+  - remote
+excluded_titles: []
+excluded_technologies: []
+allowed_locations: []
+remote_required: false
+minimum_salary: null
+salary_currency: USD
