@@ -1,27 +1,23 @@
 """Discover local PDF files and safely extract their text."""
 
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
+from job_agent.documents.base import DocumentError, LocalDocument
+
 MAX_PDF_SIZE = 20 * 1024 * 1024
 MAX_EXTRACTED_CHARACTERS = 120_000
 
 
-class PDFDocumentError(ValueError):
+class PDFDocumentError(DocumentError):
     """Raised when a local PDF cannot be read safely."""
 
 
-@dataclass(frozen=True, slots=True)
-class PDFDocument:
-    """Filesystem metadata for a discovered PDF document."""
-
-    name: str
-    size: int
-    modified_at: datetime
+# Backward-compatible name for callers that only work with PDF files.
+PDFDocument = LocalDocument
 
 
 def list_pdf_documents(directory: Path) -> list[PDFDocument]:

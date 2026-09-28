@@ -44,7 +44,7 @@ def get_document_matching_service(
     request: Request,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> DocumentMatchingService:
-    """Build the configured local-PDF matching workflow."""
+    """Build the configured local-document matching workflow."""
     llm_client: httpx.AsyncClient = request.app.state.llm_client
     return DocumentMatchingService(
         settings.pdf_resumes_path,
@@ -62,7 +62,7 @@ def get_pdf_processing_service(
     session: SessionDependency,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> PDFProcessingService:
-    """Build the local PDF catalog and classification workflow."""
+    """Build the local document catalog and classification workflow."""
     return PDFProcessingService(
         session,
         settings.pdf_resumes_path,

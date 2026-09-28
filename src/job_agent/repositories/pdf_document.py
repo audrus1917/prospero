@@ -1,4 +1,4 @@
-"""Persist and query local PDF processing records."""
+"""Persist and query local document processing records."""
 
 import hashlib
 from datetime import UTC, datetime
@@ -14,7 +14,7 @@ from job_agent.models.pdf_document import (
 
 
 class PDFDocumentRepository:
-    """Persistence operations for the local PDF processing catalog."""
+    """Persistence operations for the local document processing catalog."""
 
     def __init__(self, session: Session) -> None:
         """Initialize the repository with a database session."""
@@ -24,8 +24,8 @@ class PDFDocumentRepository:
         """Create or reset a catalog record when local file content changes.
 
         Args:
-            kind: Semantic kind of the local PDF.
-            path: Path to the PDF file.
+            kind: Semantic kind of the local document.
+            path: Path to the document file.
 
         Returns:
             The flushed catalog record representing the current file.

@@ -4,7 +4,10 @@ from pathlib import Path
 import pytest
 from pypdf import PdfWriter
 
+from job_agent.documents.base import DocumentError
+from job_agent.documents.local import extract_document_text, list_documents
 from job_agent.documents.pdf import PDFDocumentError, list_pdf_documents
+from job_agent.llm.heuristic import HeuristicProvider
 from job_agent.matching.models import DocumentMatchResult
 from job_agent.services.document_matching import DocumentBatchError, DocumentMatchingService
 
@@ -23,6 +26,7 @@ class StubDocumentProvider:
             gaps=[],
             missing_keywords=[],
             recommendations=["Emphasize the relevant project"],
+            cover_letter=[f"Cover letter line {number}" for number in range(1, 11)],
             explanation="Compared using explicit document facts.",
         )
 
@@ -37,6 +41,29 @@ def test_pdf_listing_is_local_and_sorted(tmp_path: Path) -> None:
     documents = list_pdf_documents(tmp_path)
 
     assert [document.name for document in documents] == ["a.PDF", "B.pdf"]
+
+
+def test_document_listing_includes_markdown(tmp_path: Path) -> None:
+    (tmp_path / "resume.md").write_text("# Resume", encoding="utf-8")
+    (tmp_path / "vacancy.MARKDOWN").write_text("# Vacancy", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("ignored", encoding="utf-8")
+
+    documents = list_documents(tmp_path)
+
+    assert [document.name for document in documents] == ["resume.md", "vacancy.MARKDOWN"]
+
+
+def test_markdown_text_is_read_as_utf8(tmp_path: Path) -> None:
+    (tmp_path / "resume.md").write_text("# Python developer\n\nFastAPI", encoding="utf-8")
+
+    text = extract_document_text(tmp_path, "resume.md")
+
+    assert text == "# Python developer\n\nFastAPI"
+
+
+def test_markdown_path_traversal_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(DocumentError, match="Invalid document filename"):
+        extract_document_text(tmp_path, "../resume.md")
 
 
 def test_pdf_path_traversal_is_rejected(tmp_path: Path) -> None:
@@ -74,7 +101,7 @@ def test_document_matches_are_ranked(monkeypatch: pytest.MonkeyPatch, tmp_path: 
         "other.pdf": "Sales vacancy",
     }
     monkeypatch.setattr(
-        "job_agent.services.document_matching.extract_pdf_text",
+        "job_agent.services.document_matching.extract_document_text",
         lambda _directory, filename: texts[filename],
     )
     service = DocumentMatchingService(resumes, vacancies, StubDocumentProvider())
@@ -89,5 +116,32 @@ def test_document_matches_are_ranked(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 def test_empty_vacancy_directory_fails(tmp_path: Path) -> None:
     service = DocumentMatchingService(tmp_path, tmp_path / "missing", StubDocumentProvider())
 
-    with pytest.raises(DocumentBatchError, match="No vacancy PDF"):
+    with pytest.raises(DocumentBatchError, match="No vacancy documents"):
         asyncio.run(service.analyze("resume.pdf"))
+
+
+def test_markdown_documents_are_matched(tmp_path: Path) -> None:
+    resumes = tmp_path / "resumes"
+    vacancies = tmp_path / "vacancies"
+    resumes.mkdir()
+    vacancies.mkdir()
+    (resumes / "resume.md").write_text("# Resume\n\nSenior Python developer", encoding="utf-8")
+    (vacancies / "backend.md").write_text("# Vacancy\n\nPython backend", encoding="utf-8")
+    service = DocumentMatchingService(resumes, vacancies, StubDocumentProvider())
+
+    matches = asyncio.run(service.analyze("resume.md", ["backend.md"]))
+
+    assert [match.vacancy_file for match in matches] == ["backend.md"]
+    assert matches[0].final_score == 85
+
+
+def test_heuristic_builds_cover_letter() -> None:
+    result = asyncio.run(
+        HeuristicProvider().analyze_documents(
+            "Senior Python developer with FastAPI experience",
+            "Senior Python developer vacancy",
+        )
+    )
+
+    assert len(result.cover_letter) == 10
+    assert all(result.cover_letter)

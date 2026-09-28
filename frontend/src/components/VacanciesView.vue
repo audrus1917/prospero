@@ -8,21 +8,29 @@ import StatusMessage from "./StatusMessage.vue";
 import VacancyCard from "./VacancyCard.vue";
 import VacancyDetails from "./VacancyDetails.vue";
 
+// API page size also controls when the UI decides that another page may exist.
 const PAGE_SIZE = 20;
 
+// Paginated composite rows currently rendered in the vacancy grid.
 const rows = ref<VacancyListItem[]>([]);
+// Offset points to the first row of the next page.
 const offset = ref(0);
+// List loading is separate from collection so both workflows expose accurate UI state.
 const loading = ref(false);
 const hasMore = ref(false);
 const listError = ref("");
+// Collection state belongs to the hero search form.
 const collecting = ref(false);
 const collectStatus = ref("");
 const collectError = ref(false);
 const collectQuery = ref("Senior Python Developer");
 const analyzeNew = ref(true);
+// A reactive object keeps related filters grouped and template bindings concise.
 const filters = reactive({ query: "", vacancyState: "all", remote: false });
+// A non-null row opens the details drawer for that specific list snapshot.
 const selectedRow = ref<VacancyListItem | null>(null);
 
+/** Restore shareable vacancy filters from the current URL. */
 function restoreFilters(): void {
   const params = new URLSearchParams(window.location.search);
   filters.query = params.get("query") ?? "";
@@ -30,9 +38,11 @@ function restoreFilters(): void {
   filters.remote = params.get("remote") === "true";
 }
 
+/** Persist non-default filters without adding a history entry on every search. */
 function saveFilters(): void {
   const url = new URL(window.location.href);
   const query = filters.query.trim();
+  // Omit defaults so generated links remain short and readable.
   if (query) url.searchParams.set("query", query);
   else url.searchParams.delete("query");
   if (filters.vacancyState !== "all") url.searchParams.set("vacancy_state", filters.vacancyState);
@@ -42,6 +52,7 @@ function saveFilters(): void {
   window.history.replaceState({}, "", url);
 }
 
+/** Convert local filter and pagination state into backend query parameters. */
 function filtersQuery(): URLSearchParams {
   const params = new URLSearchParams({
     vacancy_state: filters.vacancyState,
@@ -53,9 +64,12 @@ function filtersQuery(): URLSearchParams {
   return params;
 }
 
+/** Load the next vacancy page, or replace the list when `reset` is true. */
 async function loadVacancies(reset = false): Promise<void> {
+  // Prevent overlapping calls from appending the same offset twice.
   if (loading.value) return;
   if (reset) {
+    // A changed query invalidates pagination and any currently open row.
     offset.value = 0;
     rows.value = [];
     selectedRow.value = null;
@@ -64,8 +78,10 @@ async function loadVacancies(reset = false): Promise<void> {
   listError.value = "";
   try {
     const page = await api<VacancyListItem[]>(`/vacancies?${filtersQuery()}`);
+    // The same operation handles both an empty reset list and later pages.
     rows.value.push(...page);
     offset.value += page.length;
+    // A full page may have a successor; a short page is necessarily terminal.
     hasMore.value = page.length === PAGE_SIZE;
   } catch (error) {
     listError.value = error instanceof Error ? error.message : "Не удалось загрузить вакансии";
@@ -75,16 +91,19 @@ async function loadVacancies(reset = false): Promise<void> {
   }
 }
 
+/** Apply the form state to both the URL and the visible result set. */
 function applyFilters(): void {
   saveFilters();
   void loadVacancies(true);
 }
 
+/** Rebuild the list when browser history changes the query string. */
 function restoreFromHistory(): void {
   restoreFilters();
   void loadVacancies(true);
 }
 
+/** Ask the backend collector for a new HH page and optionally analyze it. */
 async function collect(): Promise<void> {
   collecting.value = true;
   collectError.value = false;
@@ -98,7 +117,9 @@ async function collect(): Promise<void> {
         analyze: analyzeNew.value,
       }),
     });
+    // Report the most useful counters while leaving detailed failures to the API.
     collectStatus.value = `Получено: ${result.fetched}, новых: ${result.created}, оценено: ${result.analyzed}`;
+    // Newly persisted vacancies must be reflected from the first list page.
     await loadVacancies(true);
   } catch (error) {
     collectError.value = true;
@@ -108,6 +129,8 @@ async function collect(): Promise<void> {
   }
 }
 
+// Read query parameters before the first render to avoid initially displaying
+// controls that disagree with the URL.
 restoreFilters();
 onMounted(() => {
   window.addEventListener("popstate", restoreFromHistory);
@@ -117,6 +140,7 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
 </script>
 
 <template>
+  <!-- Hero combines product context with the external vacancy collection form. -->
   <section class="hero">
     <div>
       <p class="eyebrow">JOB SEARCH WORKSPACE</p>
@@ -142,6 +166,7 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
     </form>
   </section>
 
+  <!-- Search filters and the paginated vacancy result grid. -->
   <section class="workspace">
     <div class="section-heading">
       <div>
@@ -151,6 +176,7 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
       <span class="count-badge">{{ rows.length }}</span>
     </div>
 
+    <!-- Submission makes applying several filter edits one explicit action. -->
     <form class="filters" @submit.prevent="applyFilters">
       <label class="search-field">
         <span class="visually-hidden">Поиск</span>
@@ -170,6 +196,7 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
       <button class="secondary-button" type="submit">Применить</button>
     </form>
 
+    <!-- Render mutually exclusive request, loading, result, and empty states. -->
     <div v-if="listError" class="error-panel">{{ listError }}</div>
     <div v-else-if="loading && !rows.length" class="loading-panel">Загружаем вакансии…</div>
     <div v-else-if="rows.length" class="card-grid">
@@ -186,6 +213,7 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
       title="Здесь пока пусто"
       description="Запустите сбор вакансий или измените фильтры."
     />
+    <!-- Pagination appends data without replacing rows already inspected. -->
     <button
       v-if="hasMore"
       class="load-more"
@@ -197,5 +225,6 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
     </button>
   </section>
 
+  <!-- Mount the accessible drawer only while a row is selected. -->
   <VacancyDetails v-if="selectedRow" :row="selectedRow" @close="selectedRow = null" />
 </template>

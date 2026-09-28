@@ -1,1 +1,1 @@
-"""Local PDF document discovery and matching."""
+"""Local resume and vacancy document discovery and extraction."""

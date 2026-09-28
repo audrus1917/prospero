@@ -1,6 +1,8 @@
 """Define validated semantic matching results."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class MatchResult(BaseModel):
@@ -21,3 +23,15 @@ class DocumentMatchResult(MatchResult):
     """Validated comparison of a resume document with a vacancy document."""
 
     recommendations: list[str]
+    cover_letter: list[Annotated[str, Field(min_length=1, max_length=500)]] = Field(
+        min_length=10, max_length=12
+    )
+
+    @field_validator("cover_letter")
+    @classmethod
+    def validate_cover_letter(cls, lines: list[str]) -> list[str]:
+        """Ensure each item represents one non-empty line of the letter."""
+        normalized = [line.strip() for line in lines]
+        if any(not line or "\n" in line or "\r" in line for line in normalized):
+            raise ValueError("cover letter must contain non-empty single lines")
+        return normalized

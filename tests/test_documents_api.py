@@ -33,6 +33,7 @@ class StubDocumentService:
                     gaps=["Kubernetes"],
                     missing_keywords=["Kubernetes"],
                     recommendations=["Mention Kubernetes only if it reflects real experience"],
+                    cover_letter=[f"Cover letter line {number}" for number in range(1, 11)],
                     explanation="Strong backend match.",
                 ),
             )
@@ -58,3 +59,4 @@ def test_document_api() -> None:
     assert matches.status_code == 200
     assert matches.json()[0]["final_score"] == 84
     assert matches.json()[0]["recommendations"]
+    assert len(matches.json()[0]["cover_letter"]) == 10

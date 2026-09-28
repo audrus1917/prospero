@@ -1,8 +1,11 @@
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 from job_agent.matching.filtering import rejection_reason
-from job_agent.matching.models import MatchResult
+from job_agent.matching.models import DocumentMatchResult, MatchResult
 from job_agent.matching.profile import CandidateProfile, load_candidate_profile
 from job_agent.matching.scoring import calculate_score
 from job_agent.models.vacancy import Vacancy
@@ -72,3 +75,21 @@ def test_example_profile_loads() -> None:
     assert candidate.experience[0].company == "Example Company"
     assert "Python" in candidate.experience[0].skills
     assert candidate.languages[0].level == "B2"
+
+
+@pytest.mark.parametrize("line_count", [9, 13])
+def test_cover_letter_line_count(line_count: int) -> None:
+    values = {
+        "technical_score": 80,
+        "seniority_score": 90,
+        "domain_score": 70,
+        "strengths": [],
+        "gaps": [],
+        "missing_keywords": [],
+        "recommendations": [],
+        "cover_letter": [f"Line {number}" for number in range(line_count)],
+        "explanation": "Evidence-based result",
+    }
+
+    with pytest.raises(ValidationError):
+        DocumentMatchResult.model_validate(values)

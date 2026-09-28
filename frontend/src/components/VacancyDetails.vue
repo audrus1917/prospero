@@ -3,12 +3,16 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 import type { VacancyListItem } from "../types";
 
+// The parent controls drawer visibility; this component only emits close intent.
 const props = defineProps<{ row: VacancyListItem }>();
 const emit = defineEmits<{ close: [] }>();
 
+// DOM reference is used to move keyboard focus into the modal after mounting.
 const panel = ref<HTMLElement | null>(null);
+// Preserve any pre-existing inline overflow rule when locking background scroll.
 let previousOverflow = "";
 
+/** Convert named backend score fields into a template-friendly collection. */
 const scores = computed(() => {
   const analysis = props.row.analysis;
   if (!analysis) return [];
@@ -21,31 +25,39 @@ const scores = computed(() => {
   ];
 });
 
+// Vacancy descriptions may contain source HTML. This view intentionally renders
+// plain text to avoid injecting untrusted markup into the document.
 const description = computed(() => props.row.vacancy.description
   .replace(/<[^>]+>/g, " ")
   .replace(/\s+/g, " ")
   .trim());
 
+/** Close the modal using the standard Escape-key interaction. */
 function closeOnEscape(event: KeyboardEvent): void {
   if (event.key === "Escape") emit("close");
 }
 
 onMounted(async () => {
+  // Prevent the obscured page from scrolling while the drawer is active.
   previousOverflow = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   document.addEventListener("keydown", closeOnEscape);
+  // Wait until Vue has rendered the ref target before focusing it.
   await nextTick();
   panel.value?.focus();
 });
 
 onBeforeUnmount(() => {
+  // Restore global DOM state and listeners exactly when the drawer disappears.
   document.body.style.overflow = previousOverflow;
   document.removeEventListener("keydown", closeOnEscape);
 });
 </script>
 
 <template>
+  <!-- Teleport avoids clipping and stacking issues from ancestor containers. -->
   <Teleport to="body">
+    <!-- Clicking the backdrop closes; clicks inside the aside do not bubble-close. -->
     <div class="drawer-backdrop" @click.self="emit('close')">
       <aside
         ref="panel"
@@ -70,6 +82,7 @@ onBeforeUnmount(() => {
           <span v-if="row.vacancy.filtered_reason" class="tag warn">Отфильтрована</span>
         </div>
 
+        <!-- Full structured analysis, including its deterministic score breakdown. -->
         <section v-if="row.analysis" class="analysis-section">
           <div class="analysis-total">
             <div class="score">{{ row.analysis.final_score }}</div>
@@ -104,11 +117,13 @@ onBeforeUnmount(() => {
           </div>
         </section>
 
+        <!-- Filtered vacancies have a reason but deliberately have no LLM analysis. -->
         <section v-else-if="row.vacancy.filtered_reason" class="analysis-section">
           <h3>Причина фильтрации</h3>
           <p>{{ row.vacancy.filtered_reason }}</p>
         </section>
 
+        <!-- Display the sanitized source description as plain text. -->
         <section class="description-section">
           <h3>Описание вакансии</h3>
           <p>{{ description || "Описание отсутствует." }}</p>

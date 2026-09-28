@@ -29,7 +29,7 @@ def test_processing_catalogs_and_classifies_documents(
     (vacancies / "vacancy.pdf").write_bytes(b"vacancy")
 
     monkeypatch.setattr(
-        "job_agent.services.pdf_processing.extract_pdf_text",
+        "job_agent.services.pdf_processing.extract_document_text",
         lambda _directory, filename: "Python FastAPI" if filename == "resume.pdf" else "Python",
     )
     engine = create_engine(
@@ -63,7 +63,7 @@ def test_processing_keeps_ocr_failure_isolated(monkeypatch, tmp_path: Path) -> N
 
         raise PDFDocumentError("PDF contains no extractable text (OCR may be required)")
 
-    monkeypatch.setattr("job_agent.services.pdf_processing.extract_pdf_text", extract)
+    monkeypatch.setattr("job_agent.services.pdf_processing.extract_document_text", extract)
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
@@ -77,3 +77,26 @@ def test_processing_keeps_ocr_failure_isolated(monkeypatch, tmp_path: Path) -> N
     assert summary.needs_ocr == 1
     assert summary.failed == 0
     assert record.processing_status is DocumentProcessingStatus.NEEDS_OCR
+
+
+def test_processing_catalogs_markdown(tmp_path: Path) -> None:
+    resumes = tmp_path / "resumes"
+    vacancies = tmp_path / "vacancies"
+    resumes.mkdir()
+    vacancies.mkdir()
+    (resumes / "resume.md").write_text("# Resume\n\nPython and FastAPI", encoding="utf-8")
+
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        summary = PDFProcessingService(
+            session, resumes, vacancies, make_classifier(tmp_path)
+        ).process()
+        record = session.exec(select(PDFDocumentRecord)).one()
+
+    assert summary.processed == 1
+    assert record.filename == "resume.md"
+    assert record.parser_version == "markdown-1"
+    assert record.extracted_text == "# Resume\n\nPython and FastAPI"

@@ -38,7 +38,7 @@ class HeuristicProvider:
         )
 
     async def analyze_documents(self, resume_text: str, vacancy_text: str) -> DocumentMatchResult:
-        """Provide a local lexical comparison for PDF documents."""
+        """Provide a local lexical comparison for extracted documents."""
         resume_terms = self._terms(resume_text)
         vacancy_terms = self._terms(vacancy_text)
         matching = sorted(resume_terms & vacancy_terms)
@@ -49,6 +49,11 @@ class HeuristicProvider:
         resume_is_senior = bool(resume_terms & senior_terms)
         seniority = 90 if vacancy_is_senior == resume_is_senior else 45
         missing_keywords = missing[:15]
+        matching_line = (
+            f"В резюме и вакансии явно упомянуты: {', '.join(matching[:5])}."  # noqa: RUF001
+            if matching
+            else "Предлагаю оценить мою кандидатуру по фактам, указанным в резюме."
+        )
         return DocumentMatchResult(
             technical_score=coverage,
             seniority_score=seniority,
@@ -60,7 +65,19 @@ class HeuristicProvider:
                 f"Mention {term} only if it reflects real experience"
                 for term in missing_keywords[:8]
             ],
-            explanation="Local lexical comparison of terms explicitly present in both PDFs.",
+            cover_letter=[
+                "Здравствуйте!",
+                "Меня заинтересовала опубликованная вакансия.",
+                "Направляю на рассмотрение своё резюме.",
+                matching_line,
+                "Сведения о моём опыте и навыках представлены в резюме.",  # noqa: RUF001
+                "Буду рад подробнее рассказать об указанных в нём фактах.",  # noqa: RUF001
+                "Готов обсудить требования и задачи этой позиции.",
+                "Буду благодарен за возможность продолжить знакомство.",
+                "Спасибо за внимание к моей кандидатуре.",
+                "С уважением.",  # noqa: RUF001
+            ],
+            explanation="Local lexical comparison of terms explicitly present in both documents.",
         )
 
     @staticmethod

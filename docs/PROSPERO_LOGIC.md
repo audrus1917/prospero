@@ -15,12 +15,13 @@ HH search API -> HHCollector -> нормализация -> PostgreSQL vacancy
 `POST /vacancies/collect` получает страницу HH, удаляет дубликаты по `(source, external_id)`,
 отбрасывает явно неподходящие вакансии и при необходимости запускает анализ.
 
-## PDF-поток
+## Поток документов
 
-PDF кладутся в `data/resumes` и `data/vacancies`. `POST /documents/process`:
+PDF и Markdown (`.md`, `.markdown`) кладутся в `data/resumes` и `data/vacancies`.
+`POST /documents/process`:
 
 1. вычисляет SHA-256 и синхронизирует каталог;
-2. извлекает текст через `pypdf`;
+2. извлекает текст PDF через `pypdf` или читает Markdown в UTF-8;
 3. классифицирует документ по `config/categories.json`;
 4. сохраняет текст, категории, версию parser/classifier и статус.
 
