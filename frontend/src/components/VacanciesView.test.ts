@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import VacanciesView from "./VacanciesView.vue";
 
+// Reset global mocks and browser history between URL-sensitive tests.
 afterEach(() => {
   vi.unstubAllGlobals();
   window.history.replaceState({}, "", "/");
@@ -10,6 +11,7 @@ afterEach(() => {
 
 describe("VacanciesView", () => {
   it("restores filters from the URL", async () => {
+    // Simulate opening a shared or bookmarked filtered vacancy URL.
     window.history.replaceState(
       {},
       "",
@@ -18,9 +20,11 @@ describe("VacanciesView", () => {
     const fetchMock = vi.fn(async (_input: string | URL | Request) => Response.json([]));
     vi.stubGlobal("fetch", fetchMock);
 
+    // Mounting reads the URL before rendering and immediately requests page one.
     const wrapper = mount(VacanciesView);
     await flushPromises();
 
+    // Controls and outgoing API parameters must reflect the same restored state.
     expect(wrapper.get<HTMLInputElement>('input[type="search"]').element.value).toBe("Python");
     expect(wrapper.get<HTMLSelectElement>("select").element.value).toBe("recommended");
     expect(wrapper.get<HTMLInputElement>('.filters input[type="checkbox"]').element.checked).toBe(true);

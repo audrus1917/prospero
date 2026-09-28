@@ -5,6 +5,7 @@ import type { VacancyListItem } from "../types";
 import VacancyCard from "./VacancyCard.vue";
 import VacancyDetails from "./VacancyDetails.vue";
 
+// Complete composite fixture exercises score, metadata, analysis, and HTML cleanup.
 const row: VacancyListItem = {
   vacancy: {
     id: 7,
@@ -40,6 +41,7 @@ const row: VacancyListItem = {
   application: null,
 };
 
+// VacancyDetails mutates body markup and scroll state as part of modal behavior.
 afterEach(() => {
   document.body.innerHTML = "";
   document.body.style.overflow = "";
@@ -47,6 +49,7 @@ afterEach(() => {
 
 describe("VacancyDetails", () => {
   it("shows the complete analysis", () => {
+    // Stub Teleport to keep modal markup inside the wrapper for direct assertions.
     const wrapper = mount(VacancyDetails, {
       props: { row },
       global: { stubs: { Teleport: true } },
@@ -57,6 +60,7 @@ describe("VacancyDetails", () => {
     expect(wrapper.text()).toContain("Strong Python match");
     expect(wrapper.text()).toContain("No explicit Kafka experience");
     expect(wrapper.text()).toContain("Build reliable Python services.");
+    // Source HTML must be converted to text rather than rendered or exposed.
     expect(wrapper.text()).not.toContain("<p>");
   });
 
@@ -66,6 +70,7 @@ describe("VacancyDetails", () => {
       global: { stubs: { Teleport: true } },
     });
 
+    // Dispatch at document level because the component installs a global listener.
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
 
@@ -79,6 +84,7 @@ describe("VacancyCard", () => {
 
     await wrapper.get("button.card-button").trigger("click");
 
+    // The parent owns drawer state, so the card communicates through an event.
     expect(wrapper.emitted("open")).toHaveLength(1);
   });
 });

@@ -1,11 +1,12 @@
-"""Catalog, extract, and classify local PDF documents."""
+"""Catalog, extract, and classify local resume and vacancy documents."""
 
 from dataclasses import dataclass
 from pathlib import Path
 
 from sqlmodel import Session
 
-from job_agent.documents.pdf import PDFDocumentError, extract_pdf_text, list_pdf_documents
+from job_agent.documents.base import DocumentError
+from job_agent.documents.local import extract_document_text, list_documents, parser_version
 from job_agent.matching.classification import DocumentClassifier
 from job_agent.models.pdf_document import DocumentKind, DocumentProcessingStatus, PDFDocumentRecord
 from job_agent.repositories.pdf_document import PDFDocumentRepository
@@ -22,9 +23,7 @@ class PDFProcessingSummary:
 
 
 class PDFProcessingService:
-    """Catalog, extract, and classify local PDFs with isolated failures."""
-
-    parser_version = "pypdf-1"
+    """Catalog, extract, and classify local documents with isolated failures."""
 
     def __init__(
         self,
@@ -44,20 +43,20 @@ class PDFProcessingService:
         return self._repository.list_records(kind)
 
     def process(self) -> PDFProcessingSummary:
-        """Process pending local PDFs while isolating per-file failures.
+        """Process pending local documents while isolating per-file failures.
 
         Returns:
             Aggregate counts for all discovered documents.
         """
         seen = processed = needs_ocr = failed = 0
         for kind, directory in self._paths.items():
-            for document in list_pdf_documents(directory):
+            for document in list_documents(directory):
                 record = self._repository.sync_file(kind, directory / document.name)
                 seen += 1
                 if record.processing_status != DocumentProcessingStatus.PENDING:
                     continue
                 try:
-                    text = extract_pdf_text(directory, document.name)
+                    text = extract_document_text(directory, document.name)
                     categories = [
                         {
                             "slug": match.slug,
@@ -71,11 +70,11 @@ class PDFProcessingService:
                         record,
                         text,
                         categories,
-                        self.parser_version,
+                        parser_version(document.name),
                         self._classifier.version,
                     )
                     processed += 1
-                except PDFDocumentError as exc:
+                except DocumentError as exc:
                     status = (
                         DocumentProcessingStatus.NEEDS_OCR
                         if "OCR" in str(exc)

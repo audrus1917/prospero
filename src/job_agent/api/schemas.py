@@ -118,7 +118,7 @@ class VacancyListItemResponse(BaseModel):
 
 
 class PDFDocumentResponse(BaseModel):
-    """Filesystem metadata for an available PDF document."""
+    """Filesystem metadata for an available local document."""
 
     name: str
     size: int
@@ -126,7 +126,7 @@ class PDFDocumentResponse(BaseModel):
 
 
 class PDFDocumentRecordResponse(BaseModel):
-    """Catalog and processing metadata for a local PDF document."""
+    """Catalog and processing metadata for a local document."""
 
     id: int
     kind: str
@@ -144,7 +144,7 @@ class PDFDocumentRecordResponse(BaseModel):
 
 
 class PDFProcessingResponse(BaseModel):
-    """Aggregate outcome of a local PDF processing run."""
+    """Aggregate outcome of a local document processing run."""
 
     seen: int
     processed: int
@@ -153,14 +153,14 @@ class PDFProcessingResponse(BaseModel):
 
 
 class PDFAnalysisRequest(BaseModel):
-    """Selection of resume and vacancy PDFs to compare."""
+    """Selection of resume and vacancy documents to compare."""
 
     resume_file: str = Field(min_length=1, max_length=255)
     vacancy_files: list[str] | None = Field(default=None, max_length=20)
 
 
 class PDFMatchResponse(BaseModel):
-    """Scored comparison between a resume and a vacancy PDF."""
+    """Scored comparison between a resume and a vacancy document."""
 
     vacancy_file: str
     final_score: int
@@ -171,4 +171,5 @@ class PDFMatchResponse(BaseModel):
     gaps: list[str]
     missing_keywords: list[str]
     recommendations: list[str]
+    cover_letter: list[str]
     explanation: str

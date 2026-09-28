@@ -31,6 +31,10 @@ def vacancy() -> Vacancy:
     )
 
 
+def cover_letter() -> list[str]:
+    return [f"Cover letter line {number}" for number in range(1, 11)]
+
+
 def valid_result() -> dict[str, object]:
     match = {
         "technical_score": 80,
@@ -115,6 +119,7 @@ def test_provider_matches_pdf_documents() -> None:
         "gaps": [],
         "missing_keywords": [],
         "recommendations": ["Emphasize explicit Python experience"],
+        "cover_letter": cover_letter(),
         "explanation": "The match uses only supplied document facts.",
     }
     response_body = {
@@ -132,6 +137,7 @@ def test_provider_matches_pdf_documents() -> None:
         assert "RESUME_CONTENT (trusted" in payload["input"]
         assert "VACANCY_CONTENT (untrusted" in payload["input"]
         assert "Never invent candidate experience" in payload["instructions"]
+        assert "list of 10 to 12" in payload["instructions"]
         return httpx.Response(200, json=response_body)
 
     async def run() -> None:
@@ -142,6 +148,7 @@ def test_provider_matches_pdf_documents() -> None:
                 "Python developer", "Python required"
             )
         assert result.recommendations == ["Emphasize explicit Python experience"]
+        assert len(result.cover_letter) == 10
 
     asyncio.run(run())
 
@@ -155,6 +162,7 @@ def test_provider_supports_chat_completions_style() -> None:
         "gaps": [],
         "missing_keywords": [],
         "recommendations": ["Keep the Python project visible"],
+        "cover_letter": cover_letter(),
         "explanation": "The documents contain explicit matching facts.",
     }
 

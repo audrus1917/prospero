@@ -1,4 +1,4 @@
-"""Define local PDF catalog persistence models."""
+"""Define the local document catalog persistence models."""
 
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -8,14 +8,14 @@ from sqlmodel import Field, SQLModel
 
 
 class DocumentKind(StrEnum):
-    """Kinds of local PDF documents handled by the catalog."""
+    """Kinds of local documents handled by the catalog."""
 
     RESUME = "resume"
     VACANCY = "vacancy"
 
 
 class DocumentProcessingStatus(StrEnum):
-    """Retryable states of local PDF processing."""
+    """Retryable states of local document processing."""
 
     PENDING = "pending"
     PROCESSED = "processed"
@@ -24,7 +24,7 @@ class DocumentProcessingStatus(StrEnum):
 
 
 class PDFDocumentRecord(SQLModel, table=True):
-    """Metadata and derived processing state for one local PDF."""
+    """Metadata and derived processing state for one local document."""
 
     __tablename__ = "pdfdocument"
 
