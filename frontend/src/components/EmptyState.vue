@@ -11,9 +11,7 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <!-- Decorative symbol is followed by caller-controlled explanatory copy. -->
   <div class="empty-state">
-    <span>∴</span>
     <h3>{{ title }}</h3>
     <p>{{ description }}</p>
   </div>

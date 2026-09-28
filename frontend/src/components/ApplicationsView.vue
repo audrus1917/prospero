@@ -111,7 +111,6 @@ onActivated(() => {
   <section class="workspace standalone-view">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">PIPELINE</p>
         <h2>Мои отклики</h2>
       </div>
       <span class="count-badge">{{ applications.length }}</span>
@@ -131,7 +130,7 @@ onActivated(() => {
             :href="vacancies.get(application.vacancy_id)?.url"
             target="_blank"
             rel="noopener noreferrer"
-          >Открыть вакансию ↗</a>
+          >Открыть вакансию</a>
         </div>
         <!-- Local draft avoids a network request for every typed character. -->
         <div class="application-notes">

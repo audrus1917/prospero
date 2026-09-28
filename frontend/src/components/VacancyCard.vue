@@ -119,7 +119,7 @@ async function track(): Promise<void> {
 
     <!-- Context-sensitive actions disappear once their goal has been reached. -->
     <div class="card-actions">
-      <a :href="row.vacancy.url" target="_blank" rel="noopener noreferrer">Открыть на HH ↗</a>
+      <a :href="row.vacancy.url" target="_blank" rel="noopener noreferrer">Открыть на HH</a>
       <button class="card-button" type="button" @click="emit('open')">Подробнее</button>
       <button
         v-if="!row.analysis && !row.vacancy.filtered_reason"
