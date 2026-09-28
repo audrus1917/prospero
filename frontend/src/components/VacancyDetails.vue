@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
 
         <footer class="drawer-footer">
           <span v-if="row.application" class="tag good">Вакансия добавлена в отклики</span>
-          <a :href="row.vacancy.url" target="_blank" rel="noopener noreferrer">Открыть на HH ↗</a>
+          <a :href="row.vacancy.url" target="_blank" rel="noopener noreferrer">Открыть на HH</a>
         </footer>
       </aside>
     </div>

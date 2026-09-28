@@ -140,18 +140,13 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
 </script>
 
 <template>
-  <!-- Hero combines product context with the external vacancy collection form. -->
-  <section class="hero">
+  <section class="collect-card" aria-label="Сбор вакансий">
     <div>
-      <p class="eyebrow">JOB SEARCH WORKSPACE</p>
-      <h1>Найти работу,<br><em>которая подходит.</em></h1>
-      <p class="hero-copy">
-        Собирайте вакансии, сравнивайте их с профилем и ведите отклики
-        в одном спокойном рабочем пространстве.
-      </p>
+      <h1>Сбор вакансий</h1>
+      <p>Найдите новые вакансии на HeadHunter и оцените их соответствие профилю.</p>
     </div>
-    <form class="collect-card" @submit.prevent="collect">
-      <label for="collect-query">Новый поиск</label>
+    <form @submit.prevent="collect">
+      <label for="collect-query">Поисковый запрос</label>
       <div class="collect-row">
         <input id="collect-query" v-model="collectQuery" maxlength="200" required>
         <button class="primary-button" type="submit" :disabled="collecting">
@@ -170,7 +165,6 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
   <section class="workspace">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">DISCOVERY</p>
         <h2>Вакансии</h2>
       </div>
       <span class="count-badge">{{ rows.length }}</span>
@@ -199,15 +193,20 @@ onBeforeUnmount(() => window.removeEventListener("popstate", restoreFromHistory)
     <!-- Render mutually exclusive request, loading, result, and empty states. -->
     <div v-if="listError" class="error-panel">{{ listError }}</div>
     <div v-else-if="loading && !rows.length" class="loading-panel">Загружаем вакансии…</div>
-    <div v-else-if="rows.length" class="card-grid">
-      <VacancyCard
-        v-for="row in rows"
-        :key="row.vacancy.id"
-        :row="row"
-        @changed="loadVacancies(true)"
-        @open="selectedRow = row"
-      />
-    </div>
+    <template v-else-if="rows.length">
+      <div class="vacancy-list-header" aria-hidden="true">
+        <span>Вакансия</span><span>Оценка</span><span>Подробности</span><span>Действия</span>
+      </div>
+      <div class="card-grid">
+        <VacancyCard
+          v-for="row in rows"
+          :key="row.vacancy.id"
+          :row="row"
+          @changed="loadVacancies(true)"
+          @open="selectedRow = row"
+        />
+      </div>
+    </template>
     <EmptyState
       v-else
       title="Здесь пока пусто"

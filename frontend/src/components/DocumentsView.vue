@@ -147,7 +147,6 @@ onMounted(loadDocuments);
   <section class="workspace standalone-view">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">DOCUMENT MATCHING</p>
         <h2>Резюме × вакансии</h2>
       </div>
     </div>
